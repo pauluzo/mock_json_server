@@ -1,0 +1,33 @@
+{
+  "tasks": [
+    {
+      "postTask": {
+        "task_name": "Modify test case 4 test suite individuality.",
+        "task_description": "Write an article or two a week, to get things up to speed",
+        "reminder_interval": "3 hours",
+        "due_date": "2021-04-15T07:25:10.000Z",
+        "set_date": "2021-02-25T07:45:31.144Z",
+        "status": "expired"
+      },
+      "userEmail": "okaforpaul26@gmail.com"
+    }
+  ],
+  "users": [
+    {
+      "token": "thiscanreallybeanythingaslongasitsastring",
+      "user_details": {
+        "user_name": "Paul Taiwo Uzochukwu Okafor",
+        "password": "okaforpapi4real",
+        "email": "okaforpaul26@gmail.com"
+      }
+    },
+    {
+      "token": "butforrealthiscanreallybeanythingaslongasitsastring",
+      "user_details": {
+        "user_name": "Silas Uchechukwu",
+        "password": "drslay4real",
+        "email": "okaforsilas95@gmail.com"
+      }
+    }
+  ]
+}
