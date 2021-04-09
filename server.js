@@ -76,11 +76,11 @@ server.delete('/api/tasks', (req, res) => {
 });
 
 server.get('/api/users', (req, res) => {
-  const body = req.body;
+  const email = req.query.email;
 
   try {
     const userData = db.get('users')
-    .find(i => i.user_details.email === body.email).value()
+    .find(i => i.user_details.email === email).value()
 
     if(userData === undefined) throw Error('No user exists for this email');
 
