@@ -1,6 +1,8 @@
 const jsonServer = require('json-server');
 const server = jsonServer.create();
 const _ = require('lodash');
+const { createToken, verifyToken } = require('./auth');
+const { generatePassword, validatePassword } = require('./passwordValidation');
 const router = jsonServer.router('./db.json');
 const middlewares = jsonServer.defaults();
 const port = process.env.PORT || 3002;
@@ -36,7 +38,7 @@ server.post('/api/tasks', (req, res) => {
   }
 });
 
-server.put('/api/tasks', (req, res) => {
+server.put('/api/tasks', verifyToken, (req, res) => {
   const body = req.body;
 
   try {
@@ -59,7 +61,7 @@ server.put('/api/tasks', (req, res) => {
   }
 });
 
-server.delete('/api/tasks', (req, res) => {
+server.delete('/api/tasks', verifyToken, (req, res) => {
   const body = req.body;
 
   try {
@@ -75,7 +77,7 @@ server.delete('/api/tasks', (req, res) => {
   }
 });
 
-server.get('/api/users', (req, res) => {
+server.get('/api/users', verifyToken, (req, res) => {
   const email = req.query.email;
 
   try {
@@ -100,18 +102,24 @@ server.get('/api/users', (req, res) => {
 });
 
 server.post('/api/users', (req, res) => {
-  const body = req.body;
+  const body = req.body.user_details;
+  const {hash, salt} = generatePassword(body.password);
+  const userData = {...body, password : hash, salt}
+  console.log('the formulated user data is: ', userData);
 
   try {
-    const returnData = db.get('users').push(body).write();
+    const returnData = db.get('users').push(userData).write();
     console.log('The returned data is : ', returnData);
+
+    const auth_token = createToken(userData.user_name, req.body.token);
+    console.log('the generated JWT token is: ', auth_token);
 
     const responseData = {
       tasks : [],
-      token : body.token,
+      auth_token,
       user_details : {
-        user_name : body.user_details.user_name,
-        email : body.user_details.email
+        user_name : body.user_name,
+        email : body.email
       }
     }
 
@@ -122,7 +130,40 @@ server.post('/api/users', (req, res) => {
   }
 });
 
-server.put('/api/users', (req, res) => {
+server.post('/api/users/login', (req, res) => {
+  const {email, password} = req.body;
+
+  try {
+    const userData = db.get('users')
+    .find(i => i.email === email).value();
+
+    if(!userData) return res.json({error : "User not found. Did you want to register instead?"});
+    console.log('Returned user data is : ', userData);
+    const isUser = validatePassword(password, userData.password, userData.salt);
+    if(isUser) {
+      const userToken = createToken(userData.user_name, userData.email);
+
+      return res.status(200).json({
+        auth_token : userToken,
+        user_details : {
+          user_name : userData.user_name,
+          email : userData.email,
+          imageUrl : userData.imageUrl
+        }
+      });
+    } else {
+      console.log('the email exists, but password failed');
+      return res.status(400).json({
+        error : "Invalid credentials. Please check credentials and try again" 
+      });
+    }
+  } catch (error) {
+    console.log('error occured', error);
+    res.status(500).json({error : 'Error occured: ' + error});
+  }
+})
+
+server.put('/api/users', verifyToken, (req, res) => {
   const body = req.body;
 
   try {
@@ -149,7 +190,7 @@ server.put('/api/users', (req, res) => {
   }
 });
 
-server.delete('/api/users', (req, res) => {
+server.delete('/api/users', verifyToken, (req, res) => {
   const body = req.body;
 
   try {
